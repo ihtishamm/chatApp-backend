@@ -10,7 +10,7 @@ app.use(
       credentials: true,
     })
   );
-  
+
   app.use(
     express.json({
       limit: "16kb",
@@ -23,11 +23,8 @@ app.use(
   app.use(cookieParser());
 
 
+import userRouter from "./routes/user.route.js";
 
-
-
-app.get("/", (req, res) => {
-  res.send("Hello World");
-});
+   app.use("/api/v1/user", userRouter);
 
 export { app };
