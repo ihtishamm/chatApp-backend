@@ -81,8 +81,6 @@ const registerUser = asyncHandler(async (req, res) => {
       .status(201)
       .json(new ApiResponse(200, createdUser, "User registered Successfully"));
   });
-
-
 const loginUser = asyncHandler(async (req, res) => {
     const { email, username, password } = req.body;
     console.log(email);
@@ -127,8 +125,106 @@ const loginUser = asyncHandler(async (req, res) => {
         )
       );
   });
+  const logoutUser = asyncHandler(async (req, res) => {
+    await User.findByIdAndUpdate(
+      req.user._id,
+      {
+        $set: {
+          refreshToken: undefined,
+        },
+      },
+      {
+        new: true,
+      }
+    );
+    const options = {
+      httpOnly: true,
+      secure: true,
+    };
+    return res
+      .status(200)
+      .clearCookie("accessToken", options)
+      .clearCookie("refreshToken", options)
+      .json(new ApiResponse(200, {}, "User logged Out"));
+  });
+
+  const RefreshAccessToken = asyncHandler(async (req, res) => {
+    const IncomingRefreshToken =
+      req.cookies.refreshToken || req.body.refreshToken;
+  
+    if (!IncomingRefreshToken) {
+      throw new ApiError(401, "Unauthorized request");
+    }
+  
+    try {
+      const decodedToken = jwt.verify(
+        IncomingRefreshToken,
+        process.env.REFRESH_TOKEN_SECRET
+      );
+  
+      const user = await User.findById(decodedToken?._id);
+      if (!user) {
+        throw new ApiError(401, "Invalid Refresh Token");
+      }
+  
+      if (IncomingRefreshToken !== user?.refreshToken) {
+        throw new ApiError(401, "Refresh Token is expired or used");
+      }
+  
+      const optons = {
+        httpOnly: true,
+        secure: true,
+      };
+      const { accessToken, newRefreshToken } =
+        await generateAccessAndRefereshTokens(user._id);
+  
+      return res
+        .status(200)
+        .cookie("accessToken", accessToken, optons)
+        .cookie("refreshToken", newRefreshToken, optons)
+        .json(
+          new ApiResponse(200, { accessToken, refreshToken: newRefreshToken })
+        );
+    } catch (error) {
+      throw new ApiError(401, error?.message || "Invalid refresh token");
+    }
+  });
+  const getCurrentUser = asyncHandler(async (req, res) => {
+    return res.status(200).json(new ApiResponse(200, req.user, "current user"));
+  });
+  const updateUserAvatar = asyncHandler(async (req, res) => {
+    const avatarLocalPath = req.file?.path;
+  
+    if (!avatarLocalPath) {
+      throw new ApiError(400, "Avatar file is missing");
+    }
+  
+    const avatar = await uploadOnCloudinary(avatarLocalPath);
+    if (!avatar.url) {
+      throw new ApiError(400, "Error while uploading on Cloudinary");
+    }
+    const user = await User.findByIdAndUpdate(
+      req.user?._id,
+      {
+        $set: {
+          avatar: avatar.url,
+        },
+      },
+      { new: true }
+    ).select("-password");
+    return res
+      .status(200)
+      .json( new ApiResponse(200, user, "Avatar Image is updated successfully"));
+  });
+
   
 
 
 
-  export { registerUser, loginUser };
+  export { registerUser, loginUser, logoutUser,
+          RefreshAccessToken, getCurrentUser,
+        updateUserAvatar
+        
+        
+        
+        };
