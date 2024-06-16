@@ -14,7 +14,8 @@ import  mongoose,{ Schema } from "mongoose";
         required: true,
         unique: true,
          lowercase: true,
-         trim: true,     
+         trim: true, 
+         index: true    
      },
      fullName:{
         type: String,

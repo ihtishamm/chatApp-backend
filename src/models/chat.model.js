@@ -12,6 +12,7 @@ import  mongoose,{ Schema, Types } from "mongoose";
      creator:{
         type:Types.ObjectId,
         ref:"User",
+        index:true
      },
       members:{
         type:[
@@ -20,6 +21,7 @@ import  mongoose,{ Schema, Types } from "mongoose";
             ref:"User",
         }
     ],
+     index:true
       },
  },{timestamps:true});
 
