@@ -12,7 +12,7 @@ import  mongoose,{ Schema, Types } from "mongoose";
             ref:"User",
             required: true,
         },
-        reciever:{
+        receiver:{
             type: Types.ObjectId,
             ref:"User",
             required: true,

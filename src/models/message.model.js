@@ -18,7 +18,7 @@ import  mongoose,{ Schema, Types } from "mongoose";
         },
         attachments:{
             type: String,
-            required: true
+            required: false
         }
     
      
