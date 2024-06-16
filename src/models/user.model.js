@@ -1,4 +1,6 @@
 import  mongoose,{ Schema } from "mongoose";
+import bcrypt from "bcrypt"
+import jwt from "jsonwebtoken"
 
  const userSchema = new Schema({
     username:{
@@ -32,6 +34,9 @@ import  mongoose,{ Schema } from "mongoose";
         type: String, // cloudinary url
         required: true,
      },
+     refreshToken: {
+      type: String
+    },
  },{timestamps:true});
 
  userSchema.pre("save",async function (next) {
