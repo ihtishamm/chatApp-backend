@@ -75,4 +75,21 @@ const myChat = asyncHandler(async (req, res) => {
     );
 });
 
-export { createGroup, myChat };
+ const singleGroup = asyncHandler(async (req, res) => {
+    const { chatId } = req.params;
+    const chat = await Chat.findById(chatId).populate("members", "fullName avatar");
+
+    if (!chat) {
+        throw new ApiError(404, "Chat not found");
+    }
+
+    if (!chat.members.some(member => member._id.toString() === req.user._id.toString())) {
+        throw new ApiError(403, "You are not a member of this chat");
+    }
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, { chat }, "Chat fetched successfully"));
+});
+
+export { createGroup, myChat, singleGroup };
