@@ -1,7 +1,7 @@
 import { ApiError } from "../utils/ErrorHandler.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import {Chat} from "../models/Chat.js";
+ import { Chat } from "../models/chat.model.js";
 import { emitEvent } from "../utils/functionns.js";
 import { ALERT, REFETCH_CHATS } from "../constants.js";
 
