@@ -1,6 +1,7 @@
 import { Router } from "express";
  import { verifyJWT } from "../middlewares/auth.middleware.js";
  import { addMember, createGroup, leaveGroup, myChat, removeMember, singleGroup } from "../controllers/chat.controller.js";
+import { upload } from "../middlewares/multer.middleware.js";
 const router = Router(); 
 
 
