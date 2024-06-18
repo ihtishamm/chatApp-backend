@@ -3,9 +3,13 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { Chat } from "../models/chat.model.js";
 import { emitEvent } from "../utils/functionns.js";
-import { ALERT, REFETCH_CHATS } from "../constants.js";
+import {
+  ALERT,
+  REFETCH_CHATS,
+} from "../constants.js";
 import { getOtherUser, validateUserIds } from "../utils/helper.js";
 import { User } from "../models/user.model.js";
+import { Message } from "../models/message.model.js";
 
 const createGroup = asyncHandler(async (req, res) => {
   const { name, members } = req.body;
@@ -187,58 +191,66 @@ const removeMember = asyncHandler(async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, { removedUser }, "Member removed successfully"));
 });
- 
- const leaveGroup = asyncHandler(async (req, res) => {
-    const chatId = req.params.id;
 
-    const chat = await Chat.findById(chatId);
-    if (!chat) {
-        throw new ApiError(404, "Chat not found");
-    }
-    if (!chat.groupChat) {
-        throw new ApiError(400, "This chat is not a group chat");
-    }
+const leaveGroup = asyncHandler(async (req, res) => {
+  const chatId = req.params.id;
 
-       const remaningMembers =  chat.members.filter((i) => i.toString() !== req.user._id.toString());
-     
-       if (chat.creator.toString() === req.user._id.toString() && chat.members.length > 0) {
-        chat.creator = remaningMembers[0];
-      }
-    
-      // If no more members, delete the chat
-      if (chat.members.length === 0) {
-        await chat.remove();
-        return res.status(200).json(new ApiResponse(200, null, 'Chat deleted as it has no members left'));
-      }
-      chat.members = remaningMembers;
+  const chat = await Chat.findById(chatId);
+  if (!chat) {
+    throw new ApiError(404, "Chat not found");
+  }
+  if (!chat.groupChat) {
+    throw new ApiError(400, "This chat is not a group chat");
+  }
 
-       await chat.save();
-       emitEvent(req, 'ALERT', chat.members, `${req.user.fullName} has left the ${chat.name} group`);
-     
-       return res.status(200).json(new ApiResponse(200, req.user.fullName, 'You have left the group successfully'));
-     
-  
- })
-  
-  const sendAttachments = asyncHandler(async (req, res) => {
-    const { chatId } = req.params;
-    const chat = await Chat.findById(chatId);
-    if (!chat) {
-      throw new ApiError(404, "Chat not found");
-    }
-    if (!chat.members.includes(req.user._id)) {
-      throw new ApiError(403, "You are not a member of this chat");
-    }
-    const attachments = req.files.map((file) => ({
-      url: file.path,
-      name: file.originalname,
-      type: file.mimetype,
-    }));
-    chat.attachments.push(...attachments);
-    await chat.save();
-    emitEvent(req, 'REFETCH_CHAT', chat.members);
-    return res.status(200).json(new ApiResponse(200, { attachments }, 'Attachments sent successfully'));
-  });
+  const remaningMembers = chat.members.filter(
+    (i) => i.toString() !== req.user._id.toString()
+  );
 
-export { createGroup, myChat, singleGroup, addMember,
-     removeMember, leaveGroup, sendAttachments };
+  if (
+    chat.creator.toString() === req.user._id.toString() &&
+    chat.members.length > 0
+  ) {
+    chat.creator = remaningMembers[0];
+  }
+
+  // If no more members, delete the chat
+  if (chat.members.length === 0) {
+    await chat.remove();
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(200, null, "Chat deleted as it has no members left")
+      );
+  }
+  chat.members = remaningMembers;
+
+  await chat.save();
+  emitEvent(
+    req,
+    "ALERT",
+    chat.members,
+    `${req.user.fullName} has left the ${chat.name} group`
+  );
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        req.user.fullName,
+        "You have left the group successfully"
+      )
+    );
+});
+
+
+
+export {
+  createGroup,
+  myChat,
+  singleGroup,
+  addMember,
+  removeMember,
+  leaveGroup,
+};
