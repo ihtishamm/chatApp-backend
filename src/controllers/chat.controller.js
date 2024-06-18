@@ -4,7 +4,8 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { Chat } from "../models/chat.model.js";
 import { emitEvent } from "../utils/functionns.js";
 import { ALERT, REFETCH_CHATS } from "../constants.js";
-import { getOtherUser } from "../utils/helper.js";
+import { getOtherUser, validateUserIds } from "../utils/helper.js";
+import { User } from "../models/user.model.js";
 
 const createGroup = asyncHandler(async (req, res) => {
   const { name, members } = req.body;
@@ -39,7 +40,7 @@ const createGroup = asyncHandler(async (req, res) => {
 });
 
 const myChat = asyncHandler(async (req, res) => {
-    const userId = req.user._id;
+  const userId = req.user._id;
   const chats = await Chat.find({ members: req.user }).populate(
     "members",
     "fullName avatar"
@@ -75,21 +76,70 @@ const myChat = asyncHandler(async (req, res) => {
     );
 });
 
- const singleGroup = asyncHandler(async (req, res) => {
-    const { chatId } = req.params;
-    const chat = await Chat.findById(chatId).populate("members", "fullName avatar");
+const singleGroup = asyncHandler(async (req, res) => {
+  const { chatId } = req.params;
+  const chat = await Chat.findById(chatId).populate(
+    "members",
+    "fullName avatar"
+  );
 
-    if (!chat) {
-        throw new ApiError(404, "Chat not found");
-    }
+  if (!chat) {
+    throw new ApiError(404, "Chat not found");
+  }
 
-    if (!chat.members.some(member => member._id.toString() === req.user._id.toString())) {
-        throw new ApiError(403, "You are not a member of this chat");
-    }
+  if (
+    !chat.members.some(
+      (member) => member._id.toString() === req.user._id.toString()
+    )
+  ) {
+    throw new ApiError(403, "You are not a member of this chat");
+  }
 
-    return res
-        .status(200)
-        .json(new ApiResponse(200, { chat }, "Chat fetched successfully"));
+  return res
+    .status(200)
+    .json(new ApiResponse(200, { chat }, "Chat fetched successfully"));
 });
 
-export { createGroup, myChat, singleGroup };
+const addMember = asyncHandler(async (req, res) => {
+  const { chatId, members } = req.body;
+  const chat = await Chat.findById(chatId);
+  if (!chat) {
+    throw new ApiError(404, "Chat not found");
+  }
+  if (!chat.groupChat) {
+    throw new ApiError(400, "This chat is not a group chat");
+  }
+
+  if (!members || members.length < 1) {
+    throw new ApiError(400, "Please Provide the members");
+  }
+  if (chat.creator.toString() !== req.user._id.toString()) {
+    throw new ApiError(403, "You are not allowed to add members to this group");
+  }
+
+//   const allMembersPromise = members.map((i) => User.findById(i).select("fullName"));
+
+//   const allMembers = await Promise.all(allMembersPromise);
+
+   const allMembers = await validateUserIds(members);
+
+  const uniqueMembers = allMembers
+    .filter((i) => !chat.members.includes(i._id.toString()))
+    .map((i) => i._id);
+  chat.members.push(...uniqueMembers);
+
+  if (chat.members.length > 100) {
+    throw new ApiError(400, "Group members cannot exceed 100");
+  }
+
+  await chat.save();
+ 
+   const allUsersName = allMembers.map((i) => i.fullName).join(",");
+   emitEvent(req,ALERT,chat.members,`${allUsersName} have been added to ${chat.name} group by ${req.user.name}`);
+   emitEvent(req,REFETCH_CHATS,chat.members);
+     
+     return res.status(200).json(new ApiResponse(200,{allMembers},"Members added successfully"));
+
+});
+
+export { createGroup, myChat, singleGroup, addMember };
