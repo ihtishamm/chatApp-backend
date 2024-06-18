@@ -117,11 +117,11 @@ const addMember = asyncHandler(async (req, res) => {
     throw new ApiError(403, "You are not allowed to add members to this group");
   }
 
-//   const allMembersPromise = members.map((i) => User.findById(i).select("fullName"));
+  //   const allMembersPromise = members.map((i) => User.findById(i).select("fullName"));
 
-//   const allMembers = await Promise.all(allMembersPromise);
+  //   const allMembers = await Promise.all(allMembersPromise);
 
-   const allMembers = await validateUserIds(members);
+  const allMembers = await validateUserIds(members);
 
   const uniqueMembers = allMembers
     .filter((i) => !chat.members.includes(i._id.toString()))
@@ -133,13 +133,62 @@ const addMember = asyncHandler(async (req, res) => {
   }
 
   await chat.save();
- 
-   const allUsersName = allMembers.map((i) => i.fullName).join(",");
-   emitEvent(req,ALERT,chat.members,`${allUsersName} have been added to ${chat.name} group by ${req.user.name}`);
-   emitEvent(req,REFETCH_CHATS,chat.members);
-     
-     return res.status(200).json(new ApiResponse(200,{allMembers},"Members added successfully"));
 
+  const allUsersName = allMembers.map((i) => i.fullName).join(",");
+  emitEvent(
+    req,
+    ALERT,
+    chat.members,
+    `${allUsersName} have been added to ${chat.name} group by ${req.user.name}`
+  );
+  emitEvent(req, REFETCH_CHATS, chat.members);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, { allMembers }, "Members added successfully"));
 });
 
-export { createGroup, myChat, singleGroup, addMember };
+const removeMember = asyncHandler(async (req, res) => {
+  const { chatId, userId } = req.body;
+
+  const [chat, removedUser] = await Promise.all([
+    Chat.findById(chatId),
+    User.findById(userId).select("fullName"),
+  ]);
+
+  if (!chat) {
+    throw new ApiError(404, "Chat not found");
+  }
+  if (!chat.groupChat) {
+    throw new ApiError(400, "This chat is not a group chat");
+  }
+  if (chat.creator.toString() !== req.user._id.toString()) {
+    throw new ApiError(
+      403,
+      "You are not allowed to remove members to this group"
+    );
+  }
+
+  if (chat.members.length <= 3) {
+    throw new ApiError(400, "Group must have at least 3 members");
+  }
+  chat.members = chat.members.filter((i) => i.toString() !== userId);
+
+  await chat.save();
+  emitEvent(
+    req,
+    ALERT,
+    chat.members,
+    `${removedUser.fullName} have been removed from ${chat.name} group by ${req.user.name}`
+  );
+  emitEvent(req, REFETCH_CHATS, chat.members);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, { removedUser }, "Member removed successfully"));
+});
+ 
+ const leaveGroup = asyncHandler(async (req, res) => {
+  
+ })
+export { createGroup, myChat, singleGroup, addMember, removeMember, leaveGroup };
