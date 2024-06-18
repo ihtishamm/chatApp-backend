@@ -283,6 +283,41 @@ const changeGroupName = asyncHandler(async (req, res) => {
 
 });
 
+const deleteChat = asyncHandler(async (req, res) => {
+    const { chatId } = req.params;
+    const chat = await Chat.findById(chatId);
+
+    if (!chat) { throw new ApiError(404, "Chat not found"); }
+    const members = chat.members;
+
+    if(chat.groupChat && chat.creator.toString() !== req.user._id.toString()) {
+        throw new ApiError(403, "You are not allowed to delete this group");
+    }
+     if(!chat.groupChat && !chat.members.includes(req.user._id.toString())) {
+        throw new ApiError(403, "You are not allowed to delete this chat");
+      }
+      
+      const attachmentMessages = await Message.find({ chat: chatId, attachments: { $exists: true, $ne: [] } });
+
+      attachmentMessages.forEach(async message => {
+          message.attachments.forEach(async attachment => {
+              await cloudinary.uploader.destroy(attachment.public_id);
+          })
+
+        })
+
+         await Promise.all([
+            chat.deleteOne(),
+            Message.deleteMany({chat: chatId})
+         ])
+
+        emitEvent(req, REFETCH_CHATS,members)
+
+     return res.status(200).json(new ApiResponse(200, null, "chat deleted successfully"));
+
+});
+
+
 
 export {
   createGroup,
@@ -292,5 +327,6 @@ export {
   removeMember,
   leaveGroup,
   getChatDetails,
-  changeGroupName
+  changeGroupName,
+  deleteChat
 };
