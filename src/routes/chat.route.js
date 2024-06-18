@@ -1,6 +1,6 @@
 import { Router } from "express";
  import { verifyJWT } from "../middlewares/auth.middleware.js";
- import { addMember, changeGroupName, createGroup, getChatDetails, leaveGroup, myChat, removeMember, singleGroup } from "../controllers/chat.controller.js";
+ import { addMember, changeGroupName, createGroup, deleteChat, getChatDetails, leaveGroup, myChat, removeMember, singleGroup } from "../controllers/chat.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 const router = Router(); 
 
@@ -15,5 +15,5 @@ const router = Router();
     router.route("/group/leave/:id").delete(verifyJWT, leaveGroup);
    router.route("/group/:chatId").get(verifyJWT, singleGroup);
     
-     router.route("/:chatId").get(verifyJWT,getChatDetails ).patch(verifyJWT,changeGroupName).delete()
+     router.route("/:chatId").get(verifyJWT,getChatDetails ).patch(verifyJWT,changeGroupName).delete(verifyJWT,deleteChat)
 export default router;
