@@ -4,10 +4,8 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { Chat } from "../models/chat.model.js";
 import { emitEvent } from "../utils/functionns.js";
 import {
-  ALERT,
   NEW_ATTACHMENT,
-  NEW_MESSAGE_ALERT,
-  REFETCH_CHATS,
+  NEW_MESSAGE_ALERT
 } from "../constants.js";
 import { User } from "../models/user.model.js";
 import { Message } from "../models/message.model.js";
@@ -42,7 +40,7 @@ const sendAttachments = asyncHandler(async (req, res) => {
     }));
   
     const messageContent = "hi";
-  
+    
     const messagedb = {
       content: messageContent,
       attachments: attachments,
@@ -75,5 +73,6 @@ const sendAttachments = asyncHandler(async (req, res) => {
       .status(200)
       .json(new ApiResponse(200, { message }, "Attachments sent successfully"));
   });
+  
 
   export {sendAttachments}
