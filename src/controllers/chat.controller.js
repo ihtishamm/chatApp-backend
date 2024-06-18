@@ -244,6 +244,44 @@ const leaveGroup = asyncHandler(async (req, res) => {
     );
 });
 
+const getChatDetails = asyncHandler(async (req, res) => {
+    const { chatId } = req.params;
+    const chat = await Chat.findById(chatId).populate("members", "fullName avatar");
+    
+    if (!chat) {
+        throw new ApiError(404, "Chat not found");
+    }
+    
+    if (
+        !chat.members.some(
+        (member) => member._id.toString() === req.user._id.toString()
+        )
+    ) {
+        throw new ApiError(403, "You are not a member of this chat");
+    }
+    
+    return res
+        .status(200)
+        .json(new ApiResponse(200, { chat }, "Chat fetched successfully"));
+    });
+
+const changeGroupName = asyncHandler(async (req, res) => {
+    const { chatId } = req.params;
+    const { name } = req.body;
+    const chat = await Chat.findById(chatId);
+
+    if (!chat) { throw new ApiError(404, "Chat not found"); }
+    if(!chat.creator.toString() === req.user._id.toString()) {
+        throw new ApiError(403, "You are not allowed to change the name of this group");
+    }
+    chat.name = name;
+    await chat.save()
+
+    emitEvent(req,REFETCH_CHATS, chat.members)
+
+     return res.status(200).json(new ApiResponse(200, { chat }, "Group name changed successfully"));
+
+});
 
 
 export {
@@ -253,4 +291,6 @@ export {
   addMember,
   removeMember,
   leaveGroup,
+  getChatDetails,
+  changeGroupName
 };
