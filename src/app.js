@@ -28,9 +28,11 @@ import chatRouter from "./routes/chat.route.js";
 import messageRouter from "./routes/message.route.js";
 import requestRouter from "./routes/request.route.js";
 
+ 
    app.use("/api/v1/user", userRouter);
    app.use("/api/v1/chat", chatRouter);
    app.use("/api/v1/message", messageRouter);
-   app.use("api/v1/request", requestRouter);
+   app.use("/api/v1/request", requestRouter);
+   
 
 export { app };
