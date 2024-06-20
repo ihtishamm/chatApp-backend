@@ -37,4 +37,12 @@ const sendRequest = asyncHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, request, "Request sent successfully"));
 });
 
-export { sendRequest };
+const recieveRequest = asyncHandler(async (req,res) => {
+     const requests = await Request.find({ receiver: req.user._id })
+        .populate("sender", "fullName  avatar");
+
+
+        return res.status(200).json(new ApiResponse(200, requests, "Requests fetched successfully"));
+})
+
+export { sendRequest, recieveRequest };
