@@ -230,7 +230,28 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
 
       return res.status(200).json(new ApiResponse(200, allotherusers, "All Users"))
  });
-;
+
+ const myFriends = asyncHandler(async (req, res) => {
+  try {
+      const myChats = await Chat.find({
+          groupChat: false,
+          members: req.user._id
+      }).lean();
+
+      const allFriends = myChats.flatMap(chat => chat.members);
+      const uniqueFriends = [...new Set(allFriends.map(friend => friend.toString()))];
+      const friendsToExclude = uniqueFriends.filter(friend => friend !== req.user._id.toString());
+
+      const friends = await User.find({
+          _id: { $in: friendsToExclude }
+      }).select('-password -refreshToken -email -username -createdAt -updatedAt -__v').lean();
+
+      res.status(200).json(new ApiResponse(200, friends, "All Friends"));
+  } catch (error) {
+      console.error(error);
+      res.status(500).json(new ApiResponse(500, null, "Internal Server Error"));
+  }
+});
 
 export {
   registerUser,
@@ -239,5 +260,6 @@ export {
   RefreshAccessToken,
   getCurrentUser,
   updateUserAvatar,
-  searchUser
+  searchUser,
+  myFriends
 };
