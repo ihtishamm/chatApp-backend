@@ -45,20 +45,24 @@ const createGroup = asyncHandler(async (req, res) => {
 
 const myChat = asyncHandler(async (req, res) => {
   const userId = req.user._id;
-  const chats = await Chat.find({ members: req.user }).populate(
+  const chats = await Chat.find({ members: req.user._id }).populate(
     "members",
     "fullName avatar"
   );
 
   const transformedChat = chats.map(({ _id, name, members, groupChat }) => {
-    const otherMember = getOtherUser(members, req.user);
+    const getOtherUsers = (members, currentUser) => {
+      return members.find(member => member._id.toString() !== currentUser.toString());
+    };
+
+    const otherMember = getOtherUsers(members, userId);
 
     return {
       _id,
       groupChat,
       avatar: groupChat
         ? members.slice(0, 3).map(({ avatar }) => avatar)
-        : [otherMember.avatar.url],
+        : [otherMember.avatar],
       name: groupChat ? name : otherMember.fullName,
       members: members.reduce((prev, curr) => {
         if (curr._id.toString() !== req.user.toString()) {
@@ -79,6 +83,52 @@ const myChat = asyncHandler(async (req, res) => {
       )
     );
 });
+
+// const myChat = asyncHandler(async (req, res) => {
+//   const userId = req.user._id;
+
+//   // Fetch chats and populate members' fullName and avatar
+//   const chats = await Chat.find({ members: req.user._id }).populate(
+//     "members",
+//     "fullName avatar"
+//   );
+
+//   const transformedChats = chats.map(({ _id, name, members, groupChat }) => {
+//     // Function to get the other user in a one-on-one chat
+//     const getOtherUser = (members, currentUser) => {
+//       return members.find(member => member._id.toString() !== currentUser.toString());
+//     };
+
+//     // Get the other member for a one-on-one chat or handle group chat
+//     const otherMember = !groupChat ? getOtherUser(members, userId) : null;
+
+//     return {
+//       _id,
+//       groupChat,
+//       avatar: groupChat
+//         ? members.slice(0, 3).map(({ avatar }) => avatar)
+//         : otherMember ? [otherMember.avatar] : [],
+//       name: groupChat ? name : otherMember ? otherMember.fullName : '',
+//       members: members.reduce((prev, curr) => {
+//         if (curr._id.toString() !== userId.toString()) {
+//           prev.push(curr._id);
+//         }
+//         return prev;
+//       }, []),
+//     };
+//   });
+
+//   return res
+//     .status(200)
+//     .json(
+//       new ApiResponse(
+//         200,
+//         transformedChats,
+//         "User chats fetched successfully"
+//       )
+//     );
+// });
+
 
 const singleGroup = asyncHandler(async (req, res) => {
   const { chatId } = req.params;
