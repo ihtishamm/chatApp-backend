@@ -12,6 +12,6 @@ const router = Router();
  router.route("/refreshToken").post(verifyJWT,RefreshAccessToken)
  router.route("/current").get(verifyJWT,getCurrentUser)
  router.route("/updateAvatar").patch(verifyJWT, upload.single("avatar"), updateUserAvatar)
- router.route("/searchUser").post(verifyJWT, searchUser)
+ router.route("/searchUser").get(verifyJWT, searchUser)
  router.route("/myFriends").get(verifyJWT, myFriends)
 export default router;
