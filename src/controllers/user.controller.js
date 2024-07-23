@@ -219,17 +219,22 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, user, "Avatar Image is updated successfully"));
 });
  
- const searchUser = asyncHandler(async (req, res) => {
-     const {fullName="" } = req.query
+const searchUser = asyncHandler(async (req, res) => {
+  const { fullName = "" } = req.query;
 
-      const myChats = await Chat.find({gropuChat:false, members: req.user})
-        
-      const allFrieds = myChats.flatMap(chat => chat.members)
+  const myChats = await Chat.find({ groupChat: false, members: req.user._id });
 
-        const  allotherusers = await User.find({_id: {$nin: allFrieds},_id: {$nin: req.user}, fullName:{$regex: fullName, $options: "i"}  }).select("-password -refreshToken -email -username -createdAt -updatedAt -__v")
+  const allFriends = myChats.flatMap(chat => chat.members);
 
-      return res.status(200).json(new ApiResponse(200, allotherusers, "All Users"))
- });
+  const exclusionList = [...new Set([...allFriends, req.user._id])];
+  const allOtherUsers = await User.find({
+    _id: { $nin: exclusionList },
+    fullName: { $regex: fullName, $options: "i" }
+  }).select("-password -refreshToken -email -username -createdAt -updatedAt -__v");
+
+  return res.status(200).json(new ApiResponse(200, allOtherUsers, "All Users"));
+});
+
 
  const myFriends = asyncHandler(async (req, res) => {
   try {
