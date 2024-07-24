@@ -104,6 +104,7 @@ import { getSockets } from "./utils/helper.js";
 
       socket.on("disconnect", () => {
         console.log("user disconnected");
+        SocketUserIds.delete(user._id.toString())
       });
     } );
 
