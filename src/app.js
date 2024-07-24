@@ -11,6 +11,7 @@ const app = express();
     cors: {
       origin: "http://localhost:5173",
       methods: ["GET", "POST", "PUT", "DELETE"],
+      credentials:true
     },
   });
 
@@ -41,6 +42,7 @@ import requestRouter from "./routes/request.route.js";
 import { NEW_MESSAGE, NEW_MESSAGE_ALERT } from "./constants.js";
 import { randomUUID } from "crypto";
 import { getSockets } from "./utils/helper.js";
+import { SocketAuth } from "./middlewares/auth.middleware.js";
 
  
    app.use("/api/v1/user", userRouter);
@@ -49,13 +51,20 @@ import { getSockets } from "./utils/helper.js";
    app.use("/api/v1/request", requestRouter);
 
     const SocketUserIds = new Map();
+
+
+
+   io.use(SocketAuth);
+ 
   
     io.on("connection", (socket) => {
+      
       const user = {
         _id: "60f3b3b3b3b3b3b3b3b3b3b3",
         name: "Shami",
         avatar: "https://www.gravatar.com/avatar/205e460b479e2e5b48aec07710c08d50",
        };
+       console.log("socket user",SocketAuth.user)
       console.log("a user connected", socket.id);
       SocketUserIds.set(user._id.toString(), socket.id);
 
