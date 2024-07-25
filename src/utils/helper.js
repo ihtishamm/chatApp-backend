@@ -14,6 +14,6 @@ export const validateUserIds = async (userIds) => {
   };
 
   export const getSockets = (users=[]) => {
-     const sockets =  users.map((user) => SocketUserIds.get(user.toString()));
+     const sockets =  users.map((user) => SocketUserIds.get(user._id.toString()));
      return sockets
   }

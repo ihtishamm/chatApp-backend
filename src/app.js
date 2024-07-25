@@ -82,13 +82,14 @@ import { SocketAuth } from "./middlewares/auth.middleware.js";
                 sender:user._id,
                 chat:chatId
               }
-  
+       console.log("Message for realtime:", members);
                 const MembersSockets = getSockets(members);
+                console.log("Emitting new message to members:", MembersSockets);
 
                 io.to(MembersSockets).emit(NEW_MESSAGE,{
                   chatId, message: messageForRealtime
                 });
-                
+
                 io.to(MembersSockets).emit(NEW_MESSAGE_ALERT,{chatId})
 
 
