@@ -50,7 +50,7 @@ import { SocketAuth } from "./middlewares/auth.middleware.js";
    app.use("/api/v1/message", messageRouter);
    app.use("/api/v1/request", requestRouter);
 
-    const SocketUserIds = new Map();
+    export  const SocketUserIds = new Map();
 
 
 
@@ -58,13 +58,7 @@ import { SocketAuth } from "./middlewares/auth.middleware.js";
  
   
     io.on("connection", (socket) => {
-      
-      const user = {
-        _id: "60f3b3b3b3b3b3b3b3b3b3b3",
-        name: "Shami",
-        avatar: "https://www.gravatar.com/avatar/205e460b479e2e5b48aec07710c08d50",
-       };
-       console.log("socket user",SocketAuth.user)
+      const user = socket.user;
       console.log("a user connected", socket.id);
       SocketUserIds.set(user._id.toString(), socket.id);
 
@@ -76,7 +70,7 @@ import { SocketAuth } from "./middlewares/auth.middleware.js";
               _id:randomUUID(),
               sender:{
                 _id:user._id,
-                fullName:user.name,
+                fullName:user.fullName, 
                 avatar: user.avatar
               },
               chat:chatId,
@@ -90,9 +84,11 @@ import { SocketAuth } from "./middlewares/auth.middleware.js";
               }
   
                 const MembersSockets = getSockets(members);
+
                 io.to(MembersSockets).emit(NEW_MESSAGE,{
                   chatId, message: messageForRealtime
                 });
+                
                 io.to(MembersSockets).emit(NEW_MESSAGE_ALERT,{chatId})
 
 

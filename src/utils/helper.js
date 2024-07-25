@@ -1,4 +1,5 @@
 import { User } from "../models/user.model.js";
+import { SocketUserIds } from "../app.js";
 
 export const getOtherUser = (members, userId) => {
     return members.find(member => member._id.toString() !== userId.toString())
@@ -13,6 +14,6 @@ export const validateUserIds = async (userIds) => {
   };
 
   export const getSockets = (users=[]) => {
-     const sockets =  users.map((user) => userSocketIds.get(user._id.toString()));
+     const sockets =  users.map((user) => SocketUserIds.get(user.toString()));
      return sockets
   }
