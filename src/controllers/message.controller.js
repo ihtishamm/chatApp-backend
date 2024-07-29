@@ -7,6 +7,7 @@ import { NEW_ATTACHMENT, NEW_MESSAGE_ALERT } from "../constants.js";
 import { User } from "../models/user.model.js";
 import { Message } from "../models/message.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { Types } from "mongoose";
 
 const sendAttachments = asyncHandler(async (req, res) => {
   const { chatId } = req.body;
@@ -76,6 +77,10 @@ const sendAttachments = asyncHandler(async (req, res) => {
 const getMeassage = asyncHandler(async (req, res) => {
   const chatId = req.params.id;
   const { page = 1 } = req.query;
+  
+  if (!Types.ObjectId.isValid(chatId)) {
+    return res.status(400).json({ message: "Invalid chat ID format" });
+  }
 
   const pageSize = 20;
   const [messages, totalMessages] = await Promise.all([
