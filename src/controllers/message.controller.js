@@ -39,7 +39,7 @@ const sendAttachments = asyncHandler(async (req, res) => {
     filename: result.original_filename,
   }));
 
-  const messageContent = "hi";
+  const messageContent = ".";
 
   const messagedb = {
     content: messageContent,
