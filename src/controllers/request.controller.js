@@ -63,51 +63,51 @@ const recieveRequest = asyncHandler(async (req, res) => {
 const acceptRequest = asyncHandler(async (req, res) => {
   const { requestId, accept } = req.body;
    
-   if(!requestId || !accept){
+  if (!requestId || !accept) {
     throw new ApiError(400, "Request Id and accept field is required");
-   }
-    console.log("requestId", requestId   , "accept", accept);
+  }
    
   const request = await Request.findById(requestId)
     .populate("sender", "fullName avatar")
     .populate("receiver", "fullName avatar");
- 
-      console.log(request);
+
   if (!request) {
     throw new ApiError(404, "Request not found");
   }
+  
   if (request.receiver._id.toString() !== req.user._id.toString()) {
     throw new ApiError(403, "You are not authorized to accept this request");
   }
+  
   if (request.status !== "pending") {
     throw new ApiError(400, "Request is already accepted or rejected");
   }
 
-  if (accept !=="accept") {
-    request.status = "rejected";
-    request.deleteOne();
-    return res
-      .status(200)
-      .json(new ApiResponse(200, request, "Request rejected successfully"));
+  if (accept === "reject") {
+    try {
+      await request.deleteOne();
+      return res.status(200).json(new ApiResponse(200, null, "Request rejected successfully"));
+    } catch (error) {
+      throw new ApiError(500, "Failed to delete the request");
+    }
   }
 
   const members = [request.sender._id, request.receiver._id];
 
-  await Promise.all([
-    Chat.create({
-      members,
-      name: request.sender.fullName + " & " + request.receiver.fullName,
-      avatar: request.sender.avatar
-    }),
-    request.deleteOne(),
-  ]);
-  // emitEvent(req, REFETCH_CHATS, members);
-
-  return res
-    .status(200)
-    .json(
-      new ApiResponse(200, request.sender, "Request accepted successfully")
-    );
+  try {
+    await Promise.all([
+      Chat.create({
+        members,
+        name: `${request.sender.fullName} & ${request.receiver.fullName}`,
+        avatar: request.sender.avatar
+      }),
+      request.deleteOne(),
+    ]);
+    return res.status(200).json(new ApiResponse(200, request.sender, "Request accepted successfully"));
+  } catch (error) {
+    throw new ApiError(500, "Failed to process the request");
+  }
 });
+
 
 export { sendRequest, recieveRequest, acceptRequest };
