@@ -15,6 +15,8 @@ const app = express();
     },
   });
 
+   app.set("io",io);
+
 
 app.use(
     cors({

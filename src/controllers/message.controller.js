@@ -3,7 +3,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { Chat } from "../models/chat.model.js";
 import { emitEvent } from "../utils/functionns.js";
-import { NEW_ATTACHMENT, NEW_MESSAGE_ALERT } from "../constants.js";
+import {NEW_MESSAGE, NEW_MESSAGE_ALERT } from "../constants.js";
 import { User } from "../models/user.model.js";
 import { Message } from "../models/message.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
@@ -61,7 +61,7 @@ const sendAttachments = asyncHandler(async (req, res) => {
 
   await chat.save();
 
-  emitEvent(req, NEW_ATTACHMENT, chat.members, {
+  emitEvent(req, NEW_MESSAGE, chat.members, {
     message: realtimeMessage,
     chatId,
   });
