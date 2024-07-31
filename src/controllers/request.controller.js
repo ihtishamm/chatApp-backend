@@ -42,7 +42,7 @@ const sendRequest = asyncHandler(async (req, res) => {
   });
 
   // Emit an event for the new request
-  emitEvent(req, "newRequest", [reqId], "request");
+  // emitEvent(req, "newRequest", [reqId], "request");
 
   return res
     .status(200)
@@ -66,6 +66,7 @@ const acceptRequest = asyncHandler(async (req, res) => {
    if(!requestId || !accept){
     throw new ApiError(400, "Request Id and accept field is required");
    }
+    console.log("requestId", requestId   , "accept", accept);
    
   const request = await Request.findById(requestId)
     .populate("sender", "fullName avatar")
@@ -82,7 +83,7 @@ const acceptRequest = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Request is already accepted or rejected");
   }
 
-  if (!accept) {
+  if (accept !=="accept") {
     request.status = "rejected";
     request.deleteOne();
     return res
@@ -100,7 +101,7 @@ const acceptRequest = asyncHandler(async (req, res) => {
     }),
     request.deleteOne(),
   ]);
-  emitEvent(req, REFETCH_CHATS, members);
+  // emitEvent(req, REFETCH_CHATS, members);
 
   return res
     .status(200)
