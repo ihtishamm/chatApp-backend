@@ -4,7 +4,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { Request } from "../models/request.model.js";
 import { emitEvent } from "../utils/functionns.js";
 import { Chat } from "../models/chat.model.js";
-import { REFETCH_CHATS } from "../constants.js";
+import { NEW_REQUEST, REFETCH_CHATS } from "../constants.js";
 
 const sendRequest = asyncHandler(async (req, res) => {
   const { reqId } = req.body;
@@ -23,11 +23,10 @@ const sendRequest = asyncHandler(async (req, res) => {
     throw new ApiError(400, "You are already friends with this user");
   }
 
-  // Check if a friend request already exists between the sender and receiver
   const existingRequest = await Request.findOne({
     $or: [
       { sender: req.user._id, receiver: reqId },
-      { sender: reqId, receiver: req.user._id },
+      { sender: reqId, receiver: req.user._id},
     ],
   });
 
@@ -41,8 +40,7 @@ const sendRequest = asyncHandler(async (req, res) => {
     receiver: reqId,
   });
 
-  // Emit an event for the new request
-  // emitEvent(req, "newRequest", [reqId], "request");
+  emitEvent(req, NEW_REQUEST, [reqId], "request sent");
 
   return res
     .status(200)

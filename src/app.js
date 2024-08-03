@@ -4,6 +4,11 @@ import cookieParser from "cookie-parser";
 import { Server } from "socket.io";
 import { createServer } from "http";
 import { Message } from "./models/message.model.js";
+import { CHAT_JOINED, CHAT_LEAVED, NEW_MESSAGE, NEW_MESSAGE_ALERT, ONLINE_USERS, START_TYPING, STOP_TYPING } from "./constants.js";
+import { randomUUID } from "crypto";
+import { getSockets } from "./utils/helper.js";
+import { SocketAuth } from "./middlewares/auth.middleware.js";
+
 const app = express();
 
  const  server = createServer(app);
@@ -14,6 +19,8 @@ const app = express();
       credentials:true
     },
   });
+ const SocketUserIds = new Map();
+  const onlineUsers = new Set();
 
    app.set("io",io);
 
@@ -41,10 +48,6 @@ import userRouter from "./routes/user.route.js";
 import chatRouter from "./routes/chat.route.js";
 import messageRouter from "./routes/message.route.js";
 import requestRouter from "./routes/request.route.js";
-import { NEW_MESSAGE, NEW_MESSAGE_ALERT } from "./constants.js";
-import { randomUUID } from "crypto";
-import { getSockets } from "./utils/helper.js";
-import { SocketAuth } from "./middlewares/auth.middleware.js";
 
  
    app.use("/api/v1/user", userRouter);
@@ -52,7 +55,6 @@ import { SocketAuth } from "./middlewares/auth.middleware.js";
    app.use("/api/v1/message", messageRouter);
    app.use("/api/v1/request", requestRouter);
 
-    export  const SocketUserIds = new Map();
 
 
 
@@ -61,7 +63,6 @@ import { SocketAuth } from "./middlewares/auth.middleware.js";
   
     io.on("connection", (socket) => {
       const user = socket.user;
-      console.log("a user connected", socket.id);
       SocketUserIds.set(user._id.toString(), socket.id);
 
 
@@ -84,7 +85,6 @@ import { SocketAuth } from "./middlewares/auth.middleware.js";
                 sender:user._id,
                 chat:chatId
               }
-       console.log("Message for realtime:", members);
                 const MembersSockets = getSockets(members);
                 console.log("Emitting new message to members:", MembersSockets);
 
@@ -104,6 +104,29 @@ import { SocketAuth } from "./middlewares/auth.middleware.js";
             
            }
         });
+        socket.on(START_TYPING, ({ members, chatId }) => {
+          const membersSockets = getSockets(members);
+          socket.to(membersSockets).emit(START_TYPING, { chatId });
+        });
+      
+        socket.on(STOP_TYPING, ({ members, chatId }) => {
+          const membersSockets = getSockets(members);
+          socket.to(membersSockets).emit(STOP_TYPING, { chatId });
+        });
+      
+        socket.on(CHAT_JOINED, ({ userId, members }) => {
+          onlineUsers.add(userId.toString());
+      
+          const membersSocket = getSockets(members);
+          io.to(membersSocket).emit(ONLINE_USERS, Array.from(onlineUsers));
+        });
+      
+        socket.on(CHAT_LEAVED, ({ userId, members }) => {
+          onlineUsers.delete(userId.toString());
+      
+          const membersSocket = getSockets(members);
+          io.to(membersSocket).emit(ONLINE_USERS, Array.from(onlineUsers));
+        });
 
 
 
@@ -111,12 +134,13 @@ import { SocketAuth } from "./middlewares/auth.middleware.js";
 
 
       socket.on("disconnect", () => {
-        console.log("user disconnected");
-        SocketUserIds.delete(user._id.toString())
+        SocketUserIds.delete(user._id.toString());
+        onlineUsers.delete(user._id.toString());
+        socket.broadcast.emit(ONLINE_USERS, Array.from(onlineUsers));
       });
     } );
 
 
    
 
-export { server };
+export { server, SocketUserIds };

@@ -13,7 +13,11 @@ export const validateUserIds = async (userIds) => {
     return validUsers;
   };
 
-  export const getSockets = (users=[]) => {
-     const sockets =  users.map((user) => SocketUserIds.get(user._id.toString()));
-     return sockets
-  }
+  export const getSockets = (users = []) => {
+    const sockets = users.map((user) => {
+      const userId = user._id ? user._id.toString() : user.toString();
+      return SocketUserIds.get(userId);
+    }).filter(socketId => socketId); // Filter out any undefined socket IDs
+  
+    return sockets;
+  };
