@@ -252,7 +252,7 @@ const leaveGroup = asyncHandler(async (req, res) => {
 
 const getChatDetails = asyncHandler(async (req, res) => {
     const { chatId } = req.params;
-    const chat = await Chat.findById(chatId).populate("members", "fullName avatar");
+    const chat = await Chat.findById(chatId).populate("members", "fullName avatar email about");
     
     if (!chat) {
         throw new ApiError(404, "Chat not found");

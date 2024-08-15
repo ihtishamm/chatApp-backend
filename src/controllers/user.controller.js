@@ -250,7 +250,6 @@ const searchUser = asyncHandler(async (req, res) => {
       const friends = await User.find({
           _id: { $in: friendsToExclude }
       }).select('-password -refreshToken -email -username -createdAt -updatedAt -__v').lean();
-
       res.status(200).json(new ApiResponse(200, friends, "All Friends"));
   } catch (error) {
       console.error(error);
