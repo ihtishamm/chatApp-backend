@@ -30,6 +30,10 @@ import jwt from "jsonwebtoken"
         required: true,
             select: false
       },
+         about:{
+        type:String,
+        default: "Hi I am using chat app!"
+         },
       avatar:{
         type: String, // cloudinary url
         required: true,
