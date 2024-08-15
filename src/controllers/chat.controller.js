@@ -3,6 +3,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { Chat } from "../models/chat.model.js";
 import { emitEvent } from "../utils/functionns.js";
+import cloudinary from 'cloudinary';
 import {
   ALERT,
   REFETCH_CHATS,
