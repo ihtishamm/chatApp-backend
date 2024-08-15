@@ -90,7 +90,7 @@ const singleGroup = asyncHandler(async (req, res) => {
   const { chatId } = req.params;
   const chat = await Chat.findById(chatId).populate(
     "members",
-    "fullName avatar"
+    "fullName avatar about"
   );
 
   if (!chat) {
